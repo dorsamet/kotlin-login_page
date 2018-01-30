@@ -12,12 +12,14 @@ interface UseCase<in Request, out Response> {
      */
     fun executeAsync(request: Request, callback: (Response) -> Unit)
 
+    fun executeSync(request: Request): Response
+
     /**
      * this will cancel an ongoing task
      */
     fun cancelTask()
 
-    abstract class BaseUseCase<in Request, out Response>: UseCase<Request, Response> {
+    abstract class BaseUseCase<in Request, Response>: UseCase<Request, Response> {
         private var job: Future<Unit>? = null
 
         override fun executeAsync(request: Request, callback: (Response) -> Unit) {
@@ -44,6 +46,8 @@ interface UseCase<in Request, out Response> {
          * This code is going to run synchronously on a different thread!
          */
         protected abstract fun internalExecute(request: Request): Response
+
+        override fun executeSync(request: Request): Response = internalExecute(request)
 
     }
 
