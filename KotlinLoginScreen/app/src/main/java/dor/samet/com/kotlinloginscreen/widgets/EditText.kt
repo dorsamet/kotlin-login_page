@@ -13,10 +13,10 @@ open class DefaultTextWatcher: TextWatcher {
 }
 
 fun EditText.addTextWatcher(beforeTextChanged: (CharSequence?, Int, Int, Int) -> Unit =
-                            { s ,start, count, after ->  },
+                            { _, _, _, _ ->  },
                             afterTextChanged: (Editable?) -> Unit = {},
                             onTextChanged: (CharSequence?, Int, Int, Int) -> Unit =
-                            { s ,start, count, after ->  }) {
+                            { _, _, _, _ ->  }) {
 
     val textWatcher = object: DefaultTextWatcher() {
         override fun afterTextChanged(s: Editable?) = afterTextChanged(s)
@@ -27,5 +27,5 @@ fun EditText.addTextWatcher(beforeTextChanged: (CharSequence?, Int, Int, Int) ->
         override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) =
                 onTextChanged(s, start, before, count)
     }
-    this.addTextChangedListener(textWatcher )
+    this.addTextChangedListener(textWatcher)
 }
