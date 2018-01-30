@@ -10,7 +10,7 @@ interface UseCase<in Request, out Response> {
     /**
      * this call is going to asynchronous!
      */
-    fun executeAsync(request: Request, callback: Response.() -> Unit)
+    fun executeAsync(request: Request, callback: (Response) -> Unit)
 
     /**
      * this will cancel an ongoing task
@@ -20,13 +20,13 @@ interface UseCase<in Request, out Response> {
     abstract class BaseUseCase<in Request, out Response>: UseCase<Request, Response> {
         private var job: Future<Unit>? = null
 
-        override fun executeAsync(request: Request, callback: Response.() -> Unit) {
+        override fun executeAsync(request: Request, callback: (Response) -> Unit) {
             job = doAsync {
                 val response = internalExecute(request)
                 // do generic stuff with the response
                 // ...
                 uiThread {
-                    response.callback()
+                    callback(response)
                 }
             }
         }
