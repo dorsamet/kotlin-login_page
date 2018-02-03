@@ -1,7 +1,8 @@
-package dor.samet.com.kotlinloginscreen
+package dor.samet.com.kotlinloginscreen.presentation.next_screen
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import dor.samet.com.kotlinloginscreen.R
 
 class NextActivity : AppCompatActivity() {
 

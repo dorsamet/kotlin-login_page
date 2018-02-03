@@ -1,4 +1,4 @@
-package dor.samet.com.kotlinloginscreen.widgets
+package dor.samet.com.kotlinloginscreen.extensions
 
 import android.text.Editable
 import android.text.TextWatcher
