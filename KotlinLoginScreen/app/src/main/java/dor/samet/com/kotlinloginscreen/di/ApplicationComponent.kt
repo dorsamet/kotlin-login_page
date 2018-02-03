@@ -4,7 +4,6 @@ import dagger.BindsInstance
 import dagger.Component
 import dagger.android.AndroidInjectionModule
 import dor.samet.com.kotlinloginscreen.KotlinLoginApplication
-import dor.samet.com.kotlinloginscreen.presentation.login_screen.LoginActivity
 import javax.inject.Scope
 
 @Scope
