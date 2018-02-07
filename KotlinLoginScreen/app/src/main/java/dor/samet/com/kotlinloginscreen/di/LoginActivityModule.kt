@@ -1,5 +1,7 @@
 package dor.samet.com.kotlinloginscreen.di
 
+import android.arch.lifecycle.ViewModelProvider
+import android.arch.lifecycle.ViewModelProviders
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import dagger.Module
 import dagger.Provides
@@ -9,9 +11,7 @@ import dor.samet.com.kotlinloginscreen.business_logic.observable.BaseObservable
 import dor.samet.com.kotlinloginscreen.business_logic.observable.Observable
 import dor.samet.com.kotlinloginscreen.business_logic.verification.VerificationUseCase
 import dor.samet.com.kotlinloginscreen.presentation.login_screen.LoginActivity
-import dor.samet.com.kotlinloginscreen.presentation.login_screen.LoginPresenter
-import javax.inject.Scope
-import kotlin.math.abs
+import dor.samet.com.kotlinloginscreen.presentation.login_screen.LoginViewModel
 
 @Module abstract class LoginActivityBinder {
 
@@ -22,7 +22,8 @@ import kotlin.math.abs
 
 @Module class LoginActivityModule {
 
-    @Provides fun provideLoginActivityPresenter(verificationManager: VerificationManager) = LoginPresenter(verificationManager)
+    @Provides fun provideLoginViewModelFactory(verificationManager: VerificationManager): ViewModelProvider.Factory =
+            LoginViewModel.ViewModelFactory(verificationManager)
 
     @Provides fun provideObservable(): Observable<VerificationManager.VerificationObserver> =
             BaseObservable()
@@ -33,9 +34,8 @@ import kotlin.math.abs
                                             verifyPasswordUseCase: VerificationUseCase.VerifyPassword,
                                             verifyPasswordsMatchUseCase: VerificationUseCase.VerifyPasswordsMatch,
                                             verifyPhoneNumberUseCase: VerificationUseCase.VerifyPhoneNumber):
-            VerificationManager =
 
-            VerificationManager.Impl(observable, verifyEmailUseCase, verifyUserNameUseCase,
+            VerificationManager = VerificationManager.Impl(observable, verifyEmailUseCase, verifyUserNameUseCase,
                     verifyPasswordUseCase, verifyPasswordsMatchUseCase, verifyPhoneNumberUseCase)
 
 
