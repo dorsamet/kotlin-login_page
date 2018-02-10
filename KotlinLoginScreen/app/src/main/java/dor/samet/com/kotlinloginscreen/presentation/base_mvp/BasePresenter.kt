@@ -18,7 +18,11 @@ open class BasePresenter<VIEW: MvpView>: LifecycleObserver {
         get() = if (_viewWeakRef.get() != null) _viewWeakRef.get() else null
 
 
-    fun applyOnView(block: VIEW.() -> Unit) = _view?.apply { block() }
+    fun applyOnView(block: VIEW.() -> Unit) {
+        _view?.apply {
+            block()
+        }
+    }
 
 
     @OnLifecycleEvent(Lifecycle.Event.ON_START)

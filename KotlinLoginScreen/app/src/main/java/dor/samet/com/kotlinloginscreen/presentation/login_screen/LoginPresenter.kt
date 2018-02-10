@@ -29,14 +29,18 @@ class LoginPresenter(private val verificationManager: VerificationManager): Base
         input.map {
             verifySync(it.text.toString(), it.id)
         }.reduce {
-            acc, b -> acc && b
-        }.also {
-            if (it) {
-
-            } else {
-
-            }
-        }
+                    acc, b -> acc && b
+                }.also {
+                    if (it) {
+                        applyOnView {
+                            moveToNextActivity()
+                        }
+                    } else {
+                        applyOnView {
+                            showToast("Unable to move to next Activity")
+                        }
+                    }
+                }
     }
 
     private fun verifySync(inputString: String, id: Int): Boolean {
@@ -65,57 +69,83 @@ class LoginPresenter(private val verificationManager: VerificationManager): Base
     }
 
     override fun onEmailVerified() {
-        // TODO: Add view operations here
+        applyOnView {
+            clearErrorMessageFor(R.id.edtTxtEmail)
+        }
     }
 
     override fun onEmailVerificationFailed() {
-        // TODO: Add view operations here
+        applyOnView {
+            showErrorMessageFor(R.id.edtTxtEmail, "Email verification failed")
+        }
     }
 
     override fun onUserNameVerified() {
-        // TODO: Add view operations here
+        applyOnView {
+            clearErrorMessageFor(R.id.edtTxtUserName)
+        }
     }
 
     override fun onUserNameVerificationFailed() {
-        // TODO: Add view operations here
+        applyOnView {
+            showErrorMessageFor(R.id.edtTxtUserName, "Username verification failed")
+        }
     }
 
     override fun onNameVerified() {
-        // TODO: Add view operations here
+        applyOnView {
+            clearErrorMessageFor(R.id.edtTxtName)
+        }
     }
 
     override fun onNameVerificationFailed() {
-        // TODO: Add view operations here
+        applyOnView {
+            showErrorMessageFor(R.id.edtTxtName, "Name verification failed")
+        }
     }
 
     override fun onPinNumberVerified() {
-        // TODO: Add view operations here
+        applyOnView {
+            clearErrorMessageFor(R.id.edtTxtPinPassword)
+        }
     }
 
     override fun onPinNumberVerificationFailed() {
-        // TODO: Add view operations here
+        applyOnView {
+            showErrorMessageFor(R.id.edtTxtEmail, "Password verification failed")
+        }
     }
 
     override fun onPhoneNumberVerified() {
-        // TODO: Add view operations here
+        applyOnView {
+            clearErrorMessageFor(R.id.edtTxtPhone)
+        }
     }
 
     override fun onPhoneNumberVerificationFailed() {
-        // TODO: Add view operations here
+        applyOnView {
+            showErrorMessageFor(R.id.edtTxtPhone, "Phone verification failed")
+        }
     }
 
     override fun onPasswordsMatched() {
-        // TODO: Add view operations here
+        applyOnView {
+            clearErrorMessageFor(R.id.edtTxtRepeatPassword)
+        }
     }
 
     override fun onPasswordMismatchFailure() {
-        // TODO: Add view operations here
+        applyOnView {
+            showErrorMessageFor(R.id.edtTxtRepeatPassword, "Passwords mismatch")
+        }
     }
 
 }
 
 interface LoginView: MvpView {
 
-    // TODO: Add view methods
+    fun clearErrorMessageFor(@IdRes id: Int)
+
+    fun showErrorMessageFor(@IdRes id: Int, message: String?)
 
 }
