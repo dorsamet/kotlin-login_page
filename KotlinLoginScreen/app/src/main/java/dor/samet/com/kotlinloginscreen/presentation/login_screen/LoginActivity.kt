@@ -13,6 +13,7 @@ import dagger.android.AndroidInjection
 import dor.samet.com.kotlinloginscreen.R
 import dor.samet.com.kotlinloginscreen.presentation.next_screen.NextActivity
 import io.reactivex.Observable
+import io.reactivex.disposables.Disposable
 import kotlinx.android.synthetic.main.activity_login.*
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.toast
@@ -20,18 +21,19 @@ import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 
 
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : AppCompatActivity(), LoginViewModel.ObservableLoginView {
 
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
     private lateinit var loginViewModel: LoginViewModel
+    private lateinit var disposable: Disposable
 
-    lateinit var edtTxtNameObservable: Observable<Pair<String, Int>>
-    lateinit var edtTxtUserNameObservable: Observable<Pair<String, Int>>
-    lateinit var edtTxtEmailObservable: Observable<Pair<String, Int>>
-    lateinit var edtTxtPhoneObservable: Observable<Pair<String, Int>>
-    lateinit var edtTxtPasswordObservable: Observable<Pair<String, Int>>
-    lateinit var edtTxtPasswordRepeatObservable: Observable<Pair<String, Int>>
-    lateinit var onClickObservable: Observable<List<Pair<String, Int>>>
+    override lateinit var edtTxtNameObservable: Observable<Pair<String, Int>>
+    override lateinit var edtTxtUserNameObservable: Observable<Pair<String, Int>>
+    override lateinit var edtTxtEmailObservable: Observable<Pair<String, Int>>
+    override lateinit var edtTxtPhoneObservable: Observable<Pair<String, Int>>
+    override lateinit var edtTxtPasswordObservable: Observable<Pair<String, Int>>
+    override lateinit var edtTxtPasswordRepeatObservable: Observable<Pair<String, Int>>
+    override lateinit var onClickObservable: Observable<List<Pair<String, Int>>>
 
     @SuppressLint("MissingSuperCall")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -62,6 +64,8 @@ class LoginActivity : AppCompatActivity() {
         edtTxtPasswordObservable = buildEditText(edtTxtPinPassword)
         edtTxtPasswordRepeatObservable = buildEditText(edtTxtRepeatPassword)
 
+        disposable = loginViewModel.bindViewStreams(this)
+
         loginViewModel.moveToNextActivity.observe(this, Observer {
             startActivity<NextActivity>()
         })
@@ -70,9 +74,9 @@ class LoginActivity : AppCompatActivity() {
             toast("Unable to move to next activity")
         })
 
-        loginViewModel.emailWasVerified.observe(this, Observer {
+        loginViewModel.emailWasVerified.subscribe {
             edtTxtEmail.reactToEvent(it!!, "Email was not verified")
-        })
+        }
 
         loginViewModel.namedWasVerified.observe(this, Observer {
             edtTxtName.reactToEvent(it!!, "Name was not verified")
@@ -94,6 +98,13 @@ class LoginActivity : AppCompatActivity() {
             edtTxtPhone.reactToEvent(it!!, "Phone was not verified")
         })
 
+    }
+
+    override fun onDestroy() {
+        if (!disposable.isDisposed) {
+            disposable.dispose()
+        }
+        super.onDestroy()
     }
 
 

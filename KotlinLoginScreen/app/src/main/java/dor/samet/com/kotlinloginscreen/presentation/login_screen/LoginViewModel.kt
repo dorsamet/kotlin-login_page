@@ -7,6 +7,9 @@ import android.support.annotation.IdRes
 import android.widget.EditText
 import dor.samet.com.kotlinloginscreen.R
 import dor.samet.com.kotlinloginscreen.business_logic.VerificationManager
+import io.reactivex.Observable
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.disposables.Disposable
 
 
 class LoginViewModel(private val verificationManager: VerificationManager): ViewModel(),
@@ -17,24 +20,26 @@ class LoginViewModel(private val verificationManager: VerificationManager): View
     val userNamedWasVerified: MutableLiveData<Boolean> = MutableLiveData()
     val passwordWasVerified: MutableLiveData<Boolean> = MutableLiveData()
     val passwordRepeatWasVerified: MutableLiveData<Boolean> = MutableLiveData()
-    val emailWasVerified: MutableLiveData<Boolean> = MutableLiveData()
     val phoneWasVerified: MutableLiveData<Boolean> = MutableLiveData()
     val moveToNextActivity: MutableLiveData<Void> = MutableLiveData()
     val unableToMoveToNextActivity: MutableLiveData<Void> = MutableLiveData()
+    val emailWasVerified: Observable<Boolean> = verificationManager.emailVerified
 
     init {
         verificationManager += this
     }
 
-
-
-    fun onEditTextLostFocus(edtTextString: String, @IdRes id: Int) {
-        verify(edtTextString, id)
+    fun bindViewStreams(observableLoginView: ObservableLoginView): Disposable {
+        // Example
+        // TODO: Expand this!
+        val disposable = CompositeDisposable()
+        val observable = observableLoginView.edtTxtEmailObservable.map {
+            it.first
+        }
+        verificationManager.subscribeToEmailEvents(observable)
+        return disposable
     }
 
-    fun onTextChanged(edtTextString: String, @IdRes id: Int) {
-        verify(edtTextString, id)
-    }
 
     fun onSubmitClicked(input: List<EditText>) {
         input.map {
@@ -66,7 +71,6 @@ class LoginViewModel(private val verificationManager: VerificationManager): View
 
     private fun verify(inputString: String, id: Int) {
         when (id) {
-            R.id.edtTxtEmail -> verificationManager.verifyEmail(inputString)
             R.id.edtTxtName -> verificationManager.verifyName(inputString)
             R.id.edtTxtPhone -> verificationManager.verifyPhoneNumber(inputString)
             R.id.edtTxtPinPassword -> verificationManager.verifyPinNumber(inputString)
@@ -74,10 +78,6 @@ class LoginViewModel(private val verificationManager: VerificationManager): View
             R.id.edtTxtUserName -> verificationManager.verifyUserName(inputString)
         }
     }
-
-    override fun onEmailVerified() = emailWasVerified.postValue(true)
-
-    override fun onEmailVerificationFailed() = emailWasVerified.postValue(false)
 
     override fun onUserNameVerified() = userNamedWasVerified.postValue(true)
 
@@ -110,5 +110,15 @@ class LoginViewModel(private val verificationManager: VerificationManager): View
             throw IllegalArgumentException("Illegal class! Expected LoginViewModel")
         }
 
+    }
+
+    interface ObservableLoginView {
+        var edtTxtNameObservable: Observable<Pair<String, Int>>
+        var edtTxtUserNameObservable: Observable<Pair<String, Int>>
+        var edtTxtEmailObservable: Observable<Pair<String, Int>>
+        var edtTxtPhoneObservable: Observable<Pair<String, Int>>
+        var edtTxtPasswordObservable: Observable<Pair<String, Int>>
+        var edtTxtPasswordRepeatObservable: Observable<Pair<String, Int>>
+        var onClickObservable: Observable<List<Pair<String, Int>>>
     }
 }

@@ -3,15 +3,13 @@ package dor.samet.com.kotlinloginscreen.business_logic
 import dor.samet.com.kotlinloginscreen.business_logic.observable.Observable
 import dor.samet.com.kotlinloginscreen.business_logic.verification.VerificationUseCase
 import dor.samet.com.kotlinloginscreen.extensions.Email
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.subjects.PublishSubject
 
 
 interface VerificationManager: Observable<VerificationManager.VerificationObserver> {
 
     interface VerificationObserver {
-
-        fun onEmailVerified()
-
-        fun onEmailVerificationFailed()
 
         fun onUserNameVerified()
 
@@ -35,7 +33,7 @@ interface VerificationManager: Observable<VerificationManager.VerificationObserv
 
     }
 
-    fun verifyEmail(email: Email)
+    val emailVerified: PublishSubject<Boolean>
     fun verifyUserName(userName: String)
     fun verifyName(name: String)
     fun verifyPhoneNumber(phoneNumber: String)
@@ -48,6 +46,7 @@ interface VerificationManager: Observable<VerificationManager.VerificationObserv
     fun verifyPhoneNumberSync(phoneNumber: String): Boolean
     fun verifyPinNumberSync(pinNumber: String): Boolean
     fun verifyPinNumbersMatchSync(pinNumber: String): Boolean
+    fun subscribeToEmailEvents(observable: io.reactivex.Observable<String>)
 
     class Impl(private val observable: Observable<VerificationObserver>,
                private val verifyEmailUseCase: VerificationUseCase.VerifyEmail,
@@ -57,6 +56,19 @@ interface VerificationManager: Observable<VerificationManager.VerificationObserv
                private val verifyPhoneNumberUseCase: VerificationUseCase.VerifyPhoneNumber):
             Observable<VerificationManager.VerificationObserver> by observable,
             VerificationManager {
+
+        override val emailVerified: PublishSubject<Boolean> = PublishSubject.create()
+
+        override fun subscribeToEmailEvents(observable: io.reactivex.Observable<String>) {
+            observable
+                    .subscribeOn(AndroidSchedulers.mainThread())
+                    .subscribe {
+                verifyEmailUseCase.executeAsync(it) {
+                    emailVerified.onNext(it)
+                }
+            }
+        }
+
         override fun verifyEmailSync(email: Email) =
                 verifyEmailUseCase.executeSync(email)
 
@@ -76,16 +88,6 @@ interface VerificationManager: Observable<VerificationManager.VerificationObserv
                 verifyPasswordsMatchUseCase.executeSync(pinNumber to pin)
 
         private var pin: String = ""
-
-        override fun verifyEmail(email: Email) {
-            verifyEmailUseCase.executeAsync(email) { result ->
-                if (result) {
-                    notifyObservers { it.onEmailVerified() }
-                } else {
-                    notifyObservers { it.onEmailVerificationFailed() }
-                }
-            }
-        }
 
         override fun verifyUserName(userName: String) {
             verifyUserNameUseCase.executeAsync(userName) { result ->
