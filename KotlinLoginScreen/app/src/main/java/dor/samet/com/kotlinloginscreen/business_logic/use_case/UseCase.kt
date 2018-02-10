@@ -19,7 +19,7 @@ interface UseCase<in Request, out Response> {
      */
     fun cancelTask()
 
-    abstract class BaseUseCase<in Request, Response>: UseCase<Request, Response> {
+    abstract class BaseUseCase<in Request, out Response>: UseCase<Request, Response> {
         private var job: Future<Unit>? = null
 
         override fun executeAsync(request: Request, callback: (Response) -> Unit) {
