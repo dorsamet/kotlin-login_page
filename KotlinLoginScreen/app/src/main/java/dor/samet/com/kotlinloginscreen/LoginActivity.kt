@@ -2,10 +2,14 @@ package dor.samet.com.kotlinloginscreen
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.text.Editable
+import android.text.TextWatcher
+import android.widget.EditText
 import com.google.i18n.phonenumbers.PhoneNumberUtil
 import dor.samet.com.kotlinloginscreen.business_logic.use_case.UseCase
 import dor.samet.com.kotlinloginscreen.business_logic.verification.OnSubmitUseCase
 import dor.samet.com.kotlinloginscreen.business_logic.verification.VerificationUseCase
+import dor.samet.com.kotlinloginscreen.widgets.DefaultTextWatcher
 import dor.samet.com.kotlinloginscreen.widgets.addTextWatcher
 import kotlinx.android.synthetic.main.activity_login.*
 import org.jetbrains.anko.startActivity
@@ -59,68 +63,44 @@ class LoginActivity : AppCompatActivity() {
             }
         }
 
-        with(edtTxtName) {
-            addTextWatcher(
-                    onTextChanged = {
-                        s: CharSequence?, _: Int, _: Int, _: Int ->
-                        val useCase: UseCase<String, Boolean> = VerificationUseCase.VerifyUserName()
-                        useCase.executeAsync(s.toString()) {
-                            if(it) {
-                                this@with.error = null
-                            } else {
-                                this@with.error = "Wrong name"
-                            }
-                        }
-                    }
-            )
+        buildEditText(edtTxtName, VerificationUseCase.VerifyUserName()) {
+            if(it) {
+                edtTxtName.error = null
+            } else {
+                edtTxtName.error = "Wrong name"
+            }
         }
 
-        with(edtTxtEmail) {
-            addTextWatcher(
-                    onTextChanged = {
-                        s: CharSequence?, _: Int, _: Int, _: Int ->
-                        val useCase: UseCase<String, Boolean> = VerificationUseCase.VerifyEmail()
-                        useCase.executeAsync(s.toString()) {
-                            if(it) {
-                                this@with.error = null
-                            } else {
-                                this@with.error = "Wrong email"
-                            }
-                        }
-                    }
-            )
+        buildEditText(edtTxtEmail, VerificationUseCase.VerifyEmail()) {
+            if(it) {
+                edtTxtEmail.error = null
+            } else {
+                edtTxtEmail.error = "Wrong email"
+            }
         }
 
-        with(edtTxtPhone) {
-            addTextWatcher(
-                    onTextChanged = {
-                        s: CharSequence?, _: Int, _: Int, _: Int ->
-                        val useCase: UseCase<String, Boolean> = VerificationUseCase.VerifyPhoneNumber(PhoneNumberUtil.getInstance())
-                        useCase.executeAsync(s.toString()) {
-                            if(it) {
-                                this@with.error = null
-                            } else {
-                                this@with.error = "Wrong Phone Number"
-                            }
-                        }
-                    }
-            )
+        buildEditText(edtTxtPhone, VerificationUseCase.VerifyPhoneNumber(PhoneNumberUtil.getInstance())) {
+            if(it) {
+                edtTxtPhone.error = null
+            } else {
+                edtTxtPhone.error = "Wrong Phone Number"
+            }
         }
 
-        with(edtTxtPinPassword) {
-            addTextWatcher(
-                    onTextChanged = {
-                        s: CharSequence?, _: Int, _: Int, _: Int ->
-                        val useCase: UseCase<String, Boolean> = VerificationUseCase.VerifyPassword()
-                        useCase.executeAsync(s.toString()) {
-                            if(it) {
-                                this@with.error = null
-                            } else {
-                                this@with.error = "Wrong password"
-                            }
-                        }
-                    }
-            )
+        buildEditText(edtTxtPinPassword, VerificationUseCase.VerifyPassword()) {
+            if(it) {
+                edtTxtPinPassword.error = null
+            } else {
+                edtTxtPinPassword.error = "Wrong password"
+            }
+        }
+
+        buildEditText(edtTxtUserName, VerificationUseCase.VerifyUserName()) {
+            if(it) {
+                edtTxtUserName.error = null
+            } else {
+                edtTxtUserName.error = "Wrong username"
+            }
         }
 
         with(edtTxtRepeatPassword) {
@@ -139,20 +119,27 @@ class LoginActivity : AppCompatActivity() {
             )
         }
 
-        with(edtTxtUserName) {
+        edtTxtUserName.addTextChangedListener(DefaultTextWatcher()) // Or some other implementation
+
+        edtTxtUserName.setOnFocusChangeListener { v, hasFocus ->  }
+    }
+
+    private fun <RESPONSE> buildEditText(editText: EditText, useCase: UseCase<String, RESPONSE>,
+                                         callback: (RESPONSE) -> Unit) {
+        with(editText) {
             addTextWatcher(
-                    onTextChanged = {
-                        s: CharSequence?, _: Int, _: Int, _: Int ->
-                        val useCase: UseCase<String, Boolean> = VerificationUseCase.VerifyUserName()
-                        useCase.executeAsync(s.toString()) {
-                            if(it) {
-                                this@with.error = null
-                            } else {
-                                this@with.error = "Wrong username"
-                            }
-                        }
+                    onTextChanged = { _, _, _, _ ->
+                        useCase.executeAsync(editText.text.toString(), callback)
                     }
             )
+
+            setOnFocusChangeListener {
+                _, hasFocus ->
+                if (!hasFocus) {
+                    useCase.executeAsync(editText.text.toString(), callback)
+                }
+            }
         }
+
     }
 }
