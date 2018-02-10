@@ -2,26 +2,36 @@ package dor.samet.com.kotlinloginscreen.presentation.login_screen
 
 import android.annotation.SuppressLint
 import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProvider
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.widget.EditText
+import com.jakewharton.rxbinding2.view.RxView
+import com.jakewharton.rxbinding2.widget.RxTextView
+import dagger.android.AndroidInjection
 import dor.samet.com.kotlinloginscreen.R
-import dor.samet.com.kotlinloginscreen.extensions.addTextWatcher
 import dor.samet.com.kotlinloginscreen.presentation.next_screen.NextActivity
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_login.*
 import org.jetbrains.anko.startActivity
 import org.jetbrains.anko.toast
-import android.arch.lifecycle.ViewModelProvider
-import dagger.android.AndroidInjection
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
-
 
 
 class LoginActivity : AppCompatActivity() {
 
     @Inject lateinit var viewModelFactory: ViewModelProvider.Factory
     private lateinit var loginViewModel: LoginViewModel
+
+    lateinit var edtTxtNameObservable: Observable<Pair<String, Int>>
+    lateinit var edtTxtUserNameObservable: Observable<Pair<String, Int>>
+    lateinit var edtTxtEmailObservable: Observable<Pair<String, Int>>
+    lateinit var edtTxtPhoneObservable: Observable<Pair<String, Int>>
+    lateinit var edtTxtPasswordObservable: Observable<Pair<String, Int>>
+    lateinit var edtTxtPasswordRepeatObservable: Observable<Pair<String, Int>>
+    lateinit var onClickObservable: Observable<List<Pair<String, Int>>>
 
     @SuppressLint("MissingSuperCall")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -30,24 +40,27 @@ class LoginActivity : AppCompatActivity() {
         setContentView(R.layout.activity_login)
         loginViewModel = ViewModelProviders.of(this, viewModelFactory).get(LoginViewModel::class.java)
         createBindings()
-
     }
 
     private fun createBindings() {
-        with(btnSubmit) {
-            setOnClickListener {
-                loginViewModel.onSubmitClicked(listOf(edtTxtName,
-                        edtTxtEmail, edtTxtPhone, edtTxtUserName,
-                        edtTxtPinPassword, edtTxtRepeatPassword))
-            }
-        }
+        onClickObservable = RxView.clicks(btnSubmit)
+                .map {
+                    listOf(edtTxtName,
+                            edtTxtEmail, edtTxtPhone, edtTxtUserName,
+                            edtTxtPinPassword, edtTxtRepeatPassword)
 
-        edtTxtName.buildEditText()
-        edtTxtEmail.buildEditText()
-        edtTxtPhone.buildEditText()
-        edtTxtUserName.buildEditText()
-        edtTxtPinPassword.buildEditText()
-        edtTxtRepeatPassword.buildEditText()
+                }.map {
+                    it.map {
+                        it.text.toString() to it.id
+                    }
+                }
+
+        edtTxtNameObservable = buildEditText(edtTxtName)
+        edtTxtEmailObservable = buildEditText(edtTxtEmail)
+        edtTxtPhoneObservable = buildEditText(edtTxtPhone)
+        edtTxtUserNameObservable = buildEditText(edtTxtUserName)
+        edtTxtPasswordObservable = buildEditText(edtTxtPinPassword)
+        edtTxtPasswordRepeatObservable = buildEditText(edtTxtRepeatPassword)
 
         loginViewModel.moveToNextActivity.observe(this, Observer {
             startActivity<NextActivity>()
@@ -92,18 +105,24 @@ class LoginActivity : AppCompatActivity() {
         }
     }
 
-    private fun EditText.buildEditText() {
-        addTextWatcher(
-                onTextChanged = { _, _, _, _ ->
-                    loginViewModel.onTextChanged(this.text.toString(), this.id)
+    private fun buildEditText(editText: EditText): Observable<Pair<String, Int>> {
+        val textChangeObservable: Observable<Pair<String, Int>> = RxTextView.textChangeEvents(editText)
+                .debounce(300, TimeUnit.MILLISECONDS)
+                .map { textChangedEvents ->
+                    textChangedEvents.text().toString() to textChangedEvents.view().id
                 }
-        )
 
-        setOnFocusChangeListener {
-            _, hasFocus ->
-            if (!hasFocus) {
-                loginViewModel.onEditTextLostFocus(this.text.toString(), this.id)
-            }
-        }
+        val focusChangeObservable: Observable<Pair<String, Int>> = RxView.focusChanges(editText)
+                .map { focus ->
+                    if (!focus) {
+                        editText.text.toString() to editText.id
+                    } else {
+                        "" to -1
+                    }
+                }.filter {
+                    it.first == "" && it.second == -1
+                }
+
+        return Observable.merge(textChangeObservable, focusChangeObservable)
     }
 }
