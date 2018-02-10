@@ -15,29 +15,6 @@ abstract class BaseActivity<VIEW: MvpView, PRESENTER: BasePresenter<VIEW>>: AppC
 
     @Inject protected lateinit var presenter: PRESENTER
 
-    protected fun onCreate(savedInstanceState: Bundle?, block: (Bundle?) -> Unit) {
-        super.onCreate(savedInstanceState)
-        block(savedInstanceState)
-    }
-
-    protected fun onStart(block: () -> Unit) {
-        super.onStart()
-        block()
-        presenter.attachView(this as VIEW)
-    }
-
-    protected fun onStop(block: () -> Unit) {
-        presenter.detachView()
-        block()
-        super.onStop()
-    }
-
-    protected fun onDestroy(block: () -> Unit) {
-        presenter.detachView()
-        block()
-        super.onDestroy()
-    }
-
     override fun showToast(message: String) {
         toast(message)
     }

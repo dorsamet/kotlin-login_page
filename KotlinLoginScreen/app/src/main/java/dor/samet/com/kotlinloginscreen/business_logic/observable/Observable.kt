@@ -27,8 +27,8 @@ open class BaseObservable<OBSERVER>: Observable<OBSERVER> {
         this += observer
     }
 
-    override operator infix fun plusAssign(observer: OBSERVER) {
-        _observers + observer
+    override infix operator fun plusAssign(observer: OBSERVER) {
+        _observers.add(observer)
     }
 
     override operator fun minus(observer: OBSERVER) {
@@ -36,7 +36,7 @@ open class BaseObservable<OBSERVER>: Observable<OBSERVER> {
     }
 
     override operator fun minusAssign(observer: OBSERVER) {
-        _observers - observer
+        _observers.remove(observer)
     }
 
     override fun <RESPONSE> notifyObservers(notify: (observer: OBSERVER) -> RESPONSE) {

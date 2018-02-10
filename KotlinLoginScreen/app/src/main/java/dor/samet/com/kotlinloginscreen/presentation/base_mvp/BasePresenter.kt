@@ -1,10 +1,16 @@
 package dor.samet.com.rest.presentation.base_mvp
 
+import android.arch.lifecycle.Lifecycle
+import android.arch.lifecycle.LifecycleObserver
+import android.arch.lifecycle.OnLifecycleEvent
 import android.support.annotation.VisibleForTesting
 import java.lang.ref.WeakReference
+import android.arch.lifecycle.LifecycleOwner
 
 
-open class BasePresenter<VIEW: MvpView> {
+
+
+open class BasePresenter<VIEW: MvpView>: LifecycleObserver {
 
     @VisibleForTesting private lateinit var _viewWeakRef: WeakReference<VIEW>
 
@@ -14,11 +20,23 @@ open class BasePresenter<VIEW: MvpView> {
 
     fun applyOnView(block: VIEW.() -> Unit) = _view?.apply { block() }
 
-    open internal fun attachView(view: VIEW) {
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onLifecycleStarted(source: LifecycleOwner) {
+        attachView(source as VIEW)
+    }
+
+    @OnLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onLifecycleStopped(source: LifecycleOwner) {
+        detachView()
+    }
+
+
+    internal open fun attachView(view: VIEW) {
         this._viewWeakRef = WeakReference(view)
     }
 
-    open internal fun detachView() {
+    internal open fun detachView() {
         _viewWeakRef.clear()
     }
 }
